@@ -132,8 +132,10 @@ def api_getfilelist():
                 relative_path = os.path.relpath(item_path, DOWNLOAD_FOLDER)
                 
                 if os.path.isfile(item_path):
-                    # 构建 wget 下载 URL
-                    url = 'http://localhost:8080/download/' + urllib.parse.quote(relative_path.replace(os.sep, '/'))
+                    # 构建 wget/下载 URL：使用请求的 host（IP 或 域名），避免硬编码 localhost
+                    # request.host_url 会基于 Host 头或实际请求地址生成 base URL（包含 scheme 与端口）
+                    base_url = request.host_url.rstrip('/')
+                    url = f"{base_url}/download/{urllib.parse.quote(relative_path.replace(os.sep, '/'))}"
                     items.append({
                         'type': 'file',
                         'name': item,
