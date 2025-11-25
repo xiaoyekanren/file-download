@@ -1,16 +1,19 @@
 # coding=utf-8
-from flask import Flask, send_from_directory, render_template, request
+from flask import Flask, send_from_directory, render_template, request, jsonify, Response
 import os
 import logging
 from datetime import datetime
 import urllib.parse
 from interface import *
+from pathlib import Path
+import csv
+from io import StringIO
 
 
 app = Flask(__name__)
 
 # 配置
-DOWNLOAD_FOLDER = './downloads'
+DOWNLOAD_FOLDER = '/Users/zzm/Downloads'
 # 创建下载目录
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 # 设置日志
@@ -93,6 +96,96 @@ def safe_join(base, path):
     return target
 
 
+@app.route('/api/getfilelist', methods=['GET'])
+def api_getfilelist():
+    """
+    获取指定目录的文件列表（CSV格式显示在页面）
+    参数: file_path - 相对于根目录的路径（可选）
+    返回格式（每行一个条目）:
+    - 文件: file, file_name, wget_url
+    - 文件夹: folder, folder_name, none
+    """
+    try:
+        # 获取 file_path 参数，默认为空
+        file_path = request.args.get('file_path', '')
+        
+        # 构建完整路径
+        if file_path:
+            target_dir = safe_join(DOWNLOAD_FOLDER, file_path)
+        else:
+            target_dir = DOWNLOAD_FOLDER
+        
+        # 检查路径是否存在
+        if not os.path.exists(target_dir):
+            return "404", 404
+        
+        # 检查是否是文件而非目录
+        if os.path.isfile(target_dir):
+            return "400", 400
+        
+        # 列出目录内容
+        items = []
+        
+        try:
+            for item in os.listdir(target_dir):
+                item_path = os.path.join(target_dir, item)
+                relative_path = os.path.relpath(item_path, DOWNLOAD_FOLDER)
+                
+                if os.path.isfile(item_path):
+                    # 构建 wget 下载 URL
+                    url = 'http://localhost:8080/download/' + urllib.parse.quote(relative_path.replace(os.sep, '/'))
+                    items.append({
+                        'type': 'file',
+                        'name': item,
+                        'url': url
+                    })
+                elif os.path.isdir(item_path):
+                    # 文件夹
+                    items.append({
+                        'type': 'folder',
+                        'name': item,
+                        'url': 'none'
+                    })
+        
+        except PermissionError as e:
+            logging.warning(f"没有权限访问目录: {target_dir} - {e}")
+            return "403", 403
+        except Exception as e:
+            logging.error(f"读取目录错误: {target_dir} - {e}")
+            return "500", 500
+        
+        # 排序：文件夹在前，文件在后，都按名称排序
+        folders = [item for item in items if item['type'] == 'folder']
+        files = [item for item in items if item['type'] == 'file']
+        folders.sort(key=lambda x: x['name'].lower())
+        files.sort(key=lambda x: x['name'].lower())
+        items = folders + files
+        
+        # 生成 CSV 格式纯文本
+        output = StringIO()
+        writer = csv.writer(output)
+        
+        # 写入数据行
+        for item in items:
+            writer.writerow([
+                item['type'],
+                item['name'],
+                item['url']
+            ])
+        
+        logging.info(f"API获取文件列表: {file_path or '根目录'} - 共 {len(items)} 项")
+        
+        # 返回纯文本格式
+        return Response(
+            output.getvalue(),
+            mimetype='text/plain; charset=utf-8'
+        )
+    
+    except Exception as e:
+        logging.error(f"API错误: {e}")
+        return "500", 500
+
+
 @app.route('/download/<path:filename>')
 def download_file(filename):
     """下载文件"""
@@ -127,9 +220,7 @@ def download_file(filename):
 if __name__ == '__main__':
     print("=" * 50)
     print("内网文件下载服务器启动")
-    print(f"访问地址: http://localhost:5000")
     print(f"文件目录: {os.path.abspath(DOWNLOAD_FOLDER)}")
     print("=" * 50)
 
-    # 在内网中运行
     app.run(host='0.0.0.0', port=8080, debug=False)
