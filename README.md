@@ -95,7 +95,7 @@ folder,subfolder,none
 ### 5.1 构建镜像
 
 ```shell
-docker build -f dependencies/Dockerfile -t filedownload:latest .
+docker build -f dependencies/Dockerfile -t filedownload:v1 .
 ```
 
 

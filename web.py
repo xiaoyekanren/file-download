@@ -13,7 +13,7 @@ from io import StringIO
 app = Flask(__name__)
 
 # 配置
-DOWNLOAD_FOLDER = '/Users/zzm/Downloads'
+DOWNLOAD_FOLDER = 'downloads'
 # 创建下载目录
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 # 设置日志
