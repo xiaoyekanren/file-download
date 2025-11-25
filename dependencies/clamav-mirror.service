@@ -1,0 +1,16 @@
+[Unit]
+Description=ClamAV Mirror File Download Server
+After=network.target
+
+[Service]
+Type=simple
+User=timecho
+WorkingDirectory=/home/timecho/clamav-mirror
+ExecStart=/home/timecho/Apps/python_3123/bin/python3 /home/timecho/clamav-mirror/web.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/timecho/clamav-mirror/logs/clamav-mirror.log
+StandardError=append:/home/timecho/clamav-mirror/logs/clamav-mirror.log
+
+[Install]
+WantedBy=multi-user.target

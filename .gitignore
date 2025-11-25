@@ -1,0 +1,18 @@
+*.log
+
+
+# python
+__pycache__
+*.pyc
+
+# vscode
+.vscode
+
+# idea
+.idea
+
+# macos
+.DS_Store
+
+# user config
+.private.ini
