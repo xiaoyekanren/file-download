@@ -117,6 +117,8 @@ def api_getfilelist():
         
         # 检查路径是否存在
         if not os.path.exists(target_dir):
+            print(f'file_path: {file_path}')
+            print(f'target_dir: {target_dir}')
             return "404", 404
         
         # 检查是否是文件而非目录
