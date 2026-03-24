@@ -1,172 +1,89 @@
+# 文件下载服务器
 
-# 1. 文件下载服务器（file_download）
+一个简洁美观的内网文件浏览与下载服务器，**纯 Python 标准库实现，无需安装任何依赖**。
 
-一个基于 Flask 的内网文件浏览与下载服务器，支持目录浏览、文件下载、API 获取文件列表（纯文本CSV格式），可通过 Docker 部署，支持 systemd 服务管理。
+## 功能特性
 
----
+- **零依赖** - 纯标准库实现，无需 pip install
+- **现代化界面** - 简洁美观的 UI，支持暗色模式自动切换
+- **目录浏览** - 面包屑导航，文件夹/文件分类展示
+- **一键复制** - 文件下载链接一键复制到剪贴板
+- **API 接口** - CSV 格式文件列表，便于脚本批量下载
+- **安全可靠** - 路径校验防目录遍历，支持大文件下载
+- **单文件部署** - 仅需 `web.py` 一个文件即可运行
 
+## 快速开始
 
-## 1.1 功能特性
+### 启动服务
 
-- 支持通过网页浏览目录、下载文件，界面美观，支持面包屑导航
-- 支持通过 API 获取指定目录下的文件/文件夹列表，返回纯文本 CSV 格式，便于脚本或自动化处理
-- 支持大文件下载，安全路径校验，防止目录遍历攻击
-- 支持 Docker 一键部署
-- 支持 systemd 服务管理
+```bash
+# 默认使用当前目录作为下载目录
+python web.py
 
----
-
-
-## 2. 快速开始
-
-
-### 2.1 安装依赖
-
-```shell
-pip install -r requirements.txt
+# 指定下载目录
+DOWNLOAD_FOLDER=/path/to/files python web.py
 ```
 
+启动后访问 http://localhost:8080
 
-### 2.2 启动服务
+## 使用说明
 
-```shell
-python3 web.py
-# 默认监听 8080 端口
-# 启动后访问 http://localhost:8080
-```
+### Web 界面
 
+| 操作 | 说明 |
+|------|------|
+| 点击文件名 | 下载文件 |
+| 点击「复制」按钮 | 复制下载链接到剪贴板 |
+| 点击文件夹名 | 进入子目录 |
+| 点击面包屑导航 | 快速返回上级目录 |
+| 点击「当前页API」 | 获取当前目录的文件列表 API |
 
-### 2.3 目录结构
+### API 接口
 
-```
-├── web.py                # 主程序入口
-├── requirements.txt      # Python依赖
-├── interface/            # 目录/文件信息处理模块
-├── templates/main.html   # 网页模板
-├── downloads/            # 默认文件存储目录
-├── dependencies/         # Docker相关及证书
-├── logs/                 # 日志目录
-```
-
----
-
-
-## 3. API 说明
-
-
-### 3.1 获取文件/目录列表
+获取文件列表（CSV 格式）：
 
 ```
 GET /api/getfilelist?file_path=相对路径
 ```
 
-**返回内容为纯文本CSV格式，每行一个条目，无表头：**
-
+返回示例：
 ```
-file,文件名,下载URL
-folder,文件夹名,none
-```
-
-示例：
-
-```
+folder,documents,none
 file,readme.txt,http://localhost:8080/download/readme.txt
-folder,subfolder,none
+file,report.pdf,http://localhost:8080/download/report.pdf
 ```
 
-> 可直接用 wget 批量下载：
-> wget -O 文件名 "下载URL"
+**批量下载脚本示例：**
 
----
-
-
-## 4. 网页端功能
-
-- 支持目录树浏览、文件夹跳转、文件下载
-- 文件类型、大小、修改时间一目了然
-- 支持面包屑导航、上级目录跳转
-
----
-
-
-## 5. Docker 部署
-
-
-### 5.1 构建镜像
-
-```shell
-docker build -f dependencies/Dockerfile -t filedownload:v1 .
+```bash
+# 获取文件列表并下载所有文件
+curl -s "http://localhost:8080/api/getfilelist" | grep "^file," | while IFS=, read -r type name url; do
+    wget -O "$name" "$url"
+done
 ```
 
+## 配置项
 
-### 5.2 运行容器
+| 环境变量 | 说明 | 默认值 |
+|---------|------|--------|
+| `DOWNLOAD_FOLDER` | 文件下载目录 | 脚本所在目录 |
+| `PORT` | 监听端口 | 8080 |
 
-```shell
-docker run -d \
-  -p 8888:8080 \
-  -v /your/local/dir:/flask/downloads \
-  --name filedownload \
-  filedownload:latest
+## 目录结构
+
+```
+file_download/
+├── web.py    # 主程序（单文件即可运行）
+└── README.md # 说明文档
 ```
 
----
+## 界面预览
 
+- 支持亮色/暗色模式（跟随系统）
+- 响应式布局，适配移动端
+- 文件类型图标区分
+- 统计信息卡片展示
 
-## 6. systemd 服务部署
+## License
 
-1. 复制 service 文件到 systemd 目录
-  ```shell
-  sudo cp dependencies/file_download.service /etc/systemd/system/
-  ```
-2. 重新加载 systemd 配置
-  ```shell
-  sudo systemctl daemon-reload
-  ```
-3. 启用并启动服务
-  ```shell
-  sudo systemctl enable file_download.service
-  sudo systemctl start file_download.service
-  ```
-4. 查看服务状态/日志
-  ```shell
-  sudo systemctl status file_download.service
-  sudo journalctl -u file_download.service -f
-  ```
-
----
-
-
-## 7. 证书与私有源支持
-
-如需对接私有源（如 nexus），可参考如下生成证书并在 Dockerfile 中添加：
-
-```shell
-openssl s_client -connect nexus.infra.timecho.com:8443 -showcerts </dev/null 2>/dev/null | openssl x509 -outform PEM > nexus-cert.pem
-cp nexus-cert.pem dependencies/
-```
-
----
-
-
-## 8. 依赖导出与安装
-
-```shell
-pip freeze > requirements.txt
-pip install -r requirements.txt
-```
-
----
-
-
-## 9. 常见问题
-
-- 默认下载目录可在 web.py 里通过 DOWNLOAD_FOLDER 配置
-- API 返回为纯文本，便于脚本处理
-- 支持大文件、中文文件名
-
----
-
-
-## 10. 联系与贡献
-
-如有建议或问题，欢迎 issue 或 PR。
+MIT
