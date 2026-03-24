@@ -94,7 +94,7 @@ def list_directory(directory_path, base_path):
         logging.error(f"读取目录错误: {directory_path} - {e}")
 
     folders.sort(key=lambda x: x['name'].lower())
-    files.sort(key=lambda x: x['name'].lower())
+    files.sort(key=lambda x: os.path.getmtime(os.path.join(directory_path, x['name'])), reverse=True)
     return folders, files
 
 
@@ -387,7 +387,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
 
         <nav class="breadcrumb-nav">
             <div class="breadcrumb">🏠 $breadcrumbs</div>
-            <a href="/api/getfilelist?file_path=$current_path" class="api-btn">当前页API</a>
+            <a href="/api/getfilelist?file_path=$current_path" class="api-btn" target="_blank">当前页API</a>
         </nav>
 
         <div class="stats">
