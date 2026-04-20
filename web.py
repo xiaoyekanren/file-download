@@ -93,7 +93,7 @@ def list_directory(directory_path, base_path):
     except Exception as e:
         logging.error(f"读取目录错误: {directory_path} - {e}")
 
-    folders.sort(key=lambda x: x['name'].lower())
+    folders.sort(key=lambda x: os.path.getmtime(os.path.join(directory_path, x['name'])), reverse=True)
     files.sort(key=lambda x: os.path.getmtime(os.path.join(directory_path, x['name'])), reverse=True)
     return folders, files
 
