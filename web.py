@@ -439,7 +439,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
 
     // 复制链接
     function copyLink(btn, url) {
-        navigator.clipboard.writeText(url).then(function() {
+        function onSuccess() {
             btn.classList.add('copied');
             btn.innerHTML = '✓';
             document.getElementById('toast').classList.add('show');
@@ -448,7 +448,20 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                 btn.innerHTML = '📋';
                 document.getElementById('toast').classList.remove('show');
             }, 2000);
-        });
+        }
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(url).then(onSuccess);
+        } else {
+            var ta = document.createElement('textarea');
+            ta.value = url;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            onSuccess();
+        }
     }
     </script>
 </body>
