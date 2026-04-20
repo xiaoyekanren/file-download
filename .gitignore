@@ -1,4 +1,6 @@
 *.log
+logs/
+*.pid
 
 
 # python
