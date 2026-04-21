@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export DOWNLOAD_FOLDER=/data/nas
+export DOWNLOAD_FOLDER=/data
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"
 LOG_DIR="$ROOT_DIR/logs"
