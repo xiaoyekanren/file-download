@@ -14,7 +14,7 @@
 
 ## 快速开始
 
-### 启动服务
+### 直接运行
 
 ```bash
 # 默认使用当前目录作为下载目录
@@ -25,6 +25,16 @@ DOWNLOAD_FOLDER=/path/to/files python web.py
 ```
 
 启动后访问 http://localhost:8080
+
+### Docker 部署
+
+```bash
+# 构建镜像
+docker build -t file-download .
+
+# 运行容器（将 /path/to/files 替换为实际的文件目录）
+docker run -d -p 8080:8080 -v /path/to/files:/data file-download
+```
 
 ## 使用说明
 
@@ -72,9 +82,11 @@ done
 ## 目录结构
 
 ```
-file_download/
-├── web.py    # 主程序（单文件即可运行）
-└── README.md # 说明文档
+file-download/
+├── web.py           # 主程序（单文件即可运行）
+├── start_server.sh  # 后台启动脚本
+├── Dockerfile       # Docker 镜像构建文件
+└── README.md        # 说明文档
 ```
 
 ## 界面预览
